@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Map of Locations</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css" />
+    <style>
+        #map {
+            width: 100%;
+            height: 600px;
+        }
+        .filter-form {
+            margin: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Map of Locations</h1>
+
+    <!-- Форма фильтрации -->
+    <div class="filter-form">
+        <label for="chrononym">Search by Chrononym:</label>
+        <input type="text" id="chrononym" placeholder="Type to search...">
+        <button id="filter-btn">Apply Filter</button>
+    </div>
+
+    <div id="map"></div>
+
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        const map = L.map('map').setView([57.0, 43.0], 7);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        let markers = [];
+
+        // Функция для загрузки данных и обновления карты
+        function fetchLocations(chrononym = "") {
+            // Удаляем старые маркеры
+            markers.forEach(marker => map.removeLayer(marker));
+            markers = [];
+
+            // Запрос на сервер для получения данных
+            fetch(`/api/locations?chrononym=${encodeURIComponent(chrononym)}`)
+                .then(response => response.json())
+                .then(data => {
+                    data.forEach(location => {
+                        const marker = L.marker([location.latitude, location.longitude])
+                            .addTo(map)
+                            .bindPopup(`
+                                <b>${location.chrononym}</b><br>
+                                <i>${location.definition}</i><br>
+                                ${location.context}<br>
+                                <small>${location.toponym}</small>
+                            `);
+                        markers.push(marker);
+                    });
+                })
+                .catch(error => console.error('Error fetching locations:', error));
+        }
+
+        // Функция для настройки автозаполнения
+        function setupAutocomplete() {
+            $("#chrononym").autocomplete({
+                source: function(request, response) {
+                    fetch(`/api/autocomplete?term=${encodeURIComponent(request.term)}`)
+                        .then(res => res.json())
+                        .then(data => response(data))
+                        .catch(err => console.error("Error fetching autocomplete:", err));
+                },
+                minLength: 2
+            });
+        }
+
+        // Загрузка всех точек при загрузке страницы
+        fetchLocations();
+
+        // Настройка автозаполнения при загрузке страницы
+        setupAutocomplete();
+
+        // Обработчик фильтрации
+        document.getElementById("filter-btn").addEventListener("click", () => {
+            const chrononym = document.getElementById("chrononym").value;
+            fetchLocations(chrononym);
+        });
+    </script>
+</body>
+</html>
+

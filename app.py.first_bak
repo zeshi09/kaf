@@ -1,0 +1,44 @@
+from flask import Flask, render_template, jsonify
+import sqlite3
+
+app = Flask(__name__)
+
+# Подключение к базе данных
+def get_data_from_db():
+    conn = sqlite3.connect("Locations.db")
+    cursor = conn.cursor()
+    query = """
+        SELECT Chrononym, Definition, Context, Toponym, Latitude, Longitude
+        FROM locations
+        WHERE Latitude IS NOT NULL AND Longitude IS NOT NULL
+    """
+    cursor.execute(query)
+    data = cursor.fetchall()
+    conn.close()
+    return data
+
+@app.route("/")
+def index():
+    # Главная страница с картой
+    return render_template("map.html")
+
+@app.route("/api/locations")
+def locations():
+    # Возвращаем данные в формате JSON
+    data = get_data_from_db()
+    response = [
+        {
+            "chrononym": row[0],
+            "definition": row[1],
+            "context": row[2],
+            "toponym": row[3],
+            "latitude": row[4],
+            "longitude": row[5],
+        }
+        for row in data
+    ]
+    return jsonify(response)
+
+if __name__ == "__main__":
+    app.run(debug=True)
+
