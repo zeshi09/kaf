@@ -5,7 +5,7 @@ app = Flask(__name__)
 
 # Функция для подключения к базе данных и извлечения данных
 def get_data_from_db(chrononym=None):
-    conn = sqlite3.connect("database.db")
+    conn = sqlite3.connect("Locations.db")
     cursor = conn.cursor()
 
     if chrononym:
@@ -51,25 +51,19 @@ def locations():
     ]
     return jsonify(response)
 
-# API для автозаполнения (поиск по Chrononym)
-@app.route("/api/autocomplete")
-def autocomplete():
-    term = request.args.get("term", "").lower()
-    conn = sqlite3.connect("database.db")
+# API для получения уникальных значений Chrononym
+@app.route("/api/chrononyms")
+def get_chrononyms():
+    conn = sqlite3.connect("Locations.db")
     cursor = conn.cursor()
 
-    query = """
-        SELECT DISTINCT Chrononym
-        FROM locations
-        WHERE LOWER(Chrononym) LIKE ?
-        LIMIT 10
-    """
-    cursor.execute(query, (f"%{term}%",))
+    query = "SELECT DISTINCT Chrononym FROM locations WHERE Chrononym IS NOT NULL"
+    cursor.execute(query)
     data = cursor.fetchall()
     conn.close()
 
-    results = [row[0] for row in data]
-    return jsonify(results)
+    chrononyms = [row[0] for row in data]
+    return jsonify(chrononyms)
 
 if __name__ == "__main__":
     app.run(debug=True)
