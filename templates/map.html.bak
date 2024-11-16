@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Map of Locations</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body {
+            display: flex;
+            flex-direction: row;
+            margin: 0;
+        }
+        #map-container {
+            flex: 3;
+            position: relative;
+        }
+        #map {
+            width: 100%;
+            height: 1200px;
+        }
+        #sidebar {
+            flex: 1;
+            max-width: 300px;
+            padding: 10px;
+            overflow-y: auto;
+            border-left: 1px solid #ccc;
+            background-color: #f9f9f9;
+            height: 100vh;;
+        }
+        .filter-form {
+            margin: 20px;
+        }
+        .location-item {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #fff;
+            cursor: pointer;
+        }
+        .location-item:hover {
+            background: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    <div id="map-container">
+        <h1>Хрононимы Костромской области</h1>
+
+        <!-- Форма фильтрации -->
+        <div class="filter-form">
+            <label for="chrononym">Фильтр по хронониму:</label>
+            <select id="chrononym">
+                <option value="">--Показать все--</option>
+            </select>
+            <button id="filter-btn">Использовать фильтр</button>
+        </div>
+
+        <div id="map"></div>
+    </div>
+
+    <!-- Боковая панель -->
+    <div id="sidebar">
+        <h2>Список хрононимов</h2>
+        <div id="locations-list"></div>
+    </div>
+    <button id="scroll-to-top" title="Наверх">&#8593;</button>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        const map = L.map('map').setView([57.0, 43.0], 7);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        let markers = [];
+
+        // Функция для загрузки данных и обновления карты
+        function fetchLocations(chrononym = "") {
+            markers.forEach(marker => map.removeLayer(marker));
+            markers = [];
+
+            fetch(`/api/locations?chrononym=${encodeURIComponent(chrononym)}`)
+                .then(response => response.json())
+                .then(data => {
+                    const locationsList = document.getElementById('locations-list');
+                    locationsList.innerHTML = ""; // Очистка списка
+
+                    data.forEach(location => {
+                        // Добавляем маркер на карту
+                        const marker = L.marker([location.latitude, location.longitude])
+                            .addTo(map)
+                            .bindPopup(`
+                                <b>${location.chrononym}</b><br>
+                                <i>${location.definition}</i><br>
+                                ${location.context}<br>
+                                <small>${location.toponym}</small>
+                            `);
+                        markers.push(marker);
+
+                        // Добавляем элемент в список
+                        const listItem = document.createElement('div');
+                        listItem.className = 'location-item';
+                        listItem.innerHTML = `
+                            <b>${location.chrononym}</b><br>
+                            <i>${location.definition}</i><br>
+                            ${location.toponym}
+                        `;
+                        listItem.addEventListener('click', () => {
+                            map.setView([location.latitude, location.longitude], 10);
+                            marker.openPopup();
+                        });
+                        locationsList.appendChild(listItem);
+                    });
+                })
+                .catch(error => console.error('Error fetching locations:', error));
+        }
+
+        // Загрузка уникальных Chrononym
+        function loadChrononyms() {
+            fetch('/api/chrononyms')
+                .then(response => response.json())
+                .then(data => {
+                    const select = document.getElementById('chrononym');
+                    data.forEach(chrononym => {
+                        const option = document.createElement('option');
+                        option.value = chrononym;
+                        option.textContent = chrononym;
+                        select.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Error loading chrononyms:', error));
+        }
+
+        fetchLocations(); // Загрузка точек при загрузке страницы
+        loadChrononyms(); // Загрузка хрононимов
+
+        document.getElementById("filter-btn").addEventListener("click", () => {
+            const chrononym = document.getElementById("chrononym").value;
+            fetchLocations(chrononym);
+        });
+    </script>
+</body>
+</html>
+

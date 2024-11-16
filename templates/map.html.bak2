@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Хрононимы Костромской области</title>
+    <title>Map of Locations</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         body {
@@ -18,7 +18,7 @@
         }
         #sidebar {
             flex: 1;
-            max-width: 320px;
+            max-width: 300px;
             padding: 10px;
             overflow-y: auto;
             border-left: 1px solid #ccc;
@@ -26,53 +26,14 @@
             height: 100%;
             display: flex;
             flex-direction: column;
-            box-shadow: 1 40px 60px rgba(0, 0, 0, 1);
-        }
-        #sidebar h1 {
-            text-align: center;
-            margin: 10px 0;
         }
         #filter-form {
             margin-bottom: 10px;
-        }
-        #filter-btn {
-            margin-top: 10px;
-            margin-left: 40px;
-            height: 40px;
-            background-color: black;
-            border: none;
-            font-size: 20px;
-            color: white;
-            transition: background-color 0.3s, transform 0.2s;;
-            border-radius: 20px;
-        }
-        #chrononym {
-            flex: 1;
-            margin-top: 10px;
-            height: 40px;
-            background-color: black;
-            font-size: 15px;
-            color: white;
-            border-radius: 20px; 
-            border: yes;
         }
         #locations-list {
             flex: 1;
             overflow-y: auto;
             border-top: 1px solid #ccc;
-            border: none;
-        }
-        #locations-list div {
-            padding: 10px;
-            border-radius: 20px;
-            margin-bottom: 10px;
-            cursor: pointer;
-            border-bottom: 1px solid #ddd;
-            transition: background-color 0.3s ease; /* Плавное изменение фона */
-        }
-        #locations-list div:hover {
-            background-color: rgba(0, 0, 0, 0.1);
-            color: black; /* Меняем цвет текста на черный для контраста */
         }
         .filter-form {
             margin-bottom: 10px;
@@ -82,8 +43,6 @@
             bottom: 10px;
             align-self: flex-end;
             padding: 10px;
-            width: 50px;
-            height: 50px;
             border: none;
             border-radius: 50%;
             background-color: #007bff;
@@ -100,61 +59,28 @@
     </style>
 </head>
 <body>
+    <div id="map"></div>
     <div id="sidebar">
-        <h1>Хрононимы Костромской области</h1>
-
-        <!-- Форма фильтрации -->
         <div id="filter-form" class="filter-form">
             <label for="chrononym">Фильтр по хронониму:</label>
             <select id="chrononym">
                 <option value="">--Показать все--</option>
             </select>
             <button id="filter-btn">Использовать фильтр</button>
-            <!--<button id="filter-btn">Сбросить фильтр</button>-->
         </div>
-
-        <p id="selected-count">Выбрано: 0</p>
-
         <div id="locations-list">
             <!-- Список хрононимов будет загружен сюда -->
         </div>
-
         <button id="scroll-to-top" title="Наверх">&#8593;</button>
     </div>
 
-    <div id="map"></div>
-
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        <!--const map = L.map('map').setView([57.0, 43.0], 7);-->
-        const map = L.map('map', {
-          center: [58.0, 43.5],
-          zoom: 7,
-          maxZoom: 15,
-          minZoom: 7
-        });
+        const map = L.map('map').setView([57.0, 43.0], 7);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            <!--attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',-->
-            attributionControl: false,
-            noWrap: true
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
-
-        const geojsonUrl = 'https://raw.githubusercontent.com/simp37/Russia_geoJSON/refs/heads/master/Kostromskaya.geojson';
-        fetch(geojsonUrl)
-            .then(response => response.json())
-            .then(data => {
-                L.geoJSON(data, {
-                    style: function (feature) {
-                        return {
-                            color: 'blue',   // Цвет границы
-                            weight: 3,       // Толщина линии
-                            opacity: 0.1     // Прозрачность
-                        };
-                    }
-                }).addTo(map);
-            })
-            .catch(error => console.error('Error loading GeoJSON file:', error));
 
         let markers = [];
 
@@ -171,8 +97,6 @@
                     const locationsList = document.getElementById('locations-list');
                     locationsList.innerHTML = ""; // Очищаем список перед обновлением
 
-                    document.getElementById('selected-count').textContent = `Выбрано: ${data.length}`;
-
                     data.forEach(location => {
                         // Добавление маркера на карту
                         const marker = L.marker([location.latitude, location.longitude])
@@ -185,17 +109,11 @@
                             `);
                         markers.push(marker);
 
-                        // Создаем HTML элемент для списка с полным описанием
+                        // Добавление элемента списка
                         const listItem = document.createElement('div');
-                        listItem.innerHTML = `
-                            <b>${location.chrononym}</b><br>
-                            <i>${location.definition}</i><br>
-                            ${location.context}<br>
-                            <small>${location.toponym}</small>
-                        `;
+                        listItem.textContent = location.chrononym;
                         listItem.style.cursor = 'pointer';
-                        listItem.style.padding = '10px';
-                        listItem.style.marginBottom = '10px';
+                        listItem.style.padding = '5px';
                         listItem.style.borderBottom = '1px solid #ddd';
                         listItem.addEventListener('click', () => {
                             map.setView([location.latitude, location.longitude], 10);
