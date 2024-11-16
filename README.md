@@ -4,10 +4,11 @@
 
 ```dockerfile
 FROM ubuntu  
-RUN apt udpate && apt upgrade -y
+RUN apt update && apt upgrade -y
 RUN apt install -y python3 python3-pip sqlite3 git
-RUN pip3 install flask 
+RUN apt install -y python3-flask 
+WORKDIR /root
 RUN git clone https://github.com/zeshi09/kaf.git
-RUN cd kaf
-ENTRYPOINT FLASK_APP=/root/kaf/app.py flask run --host=0.0.0.0 --port=5000
+WORKDIR /root/kaf
+ENTRYPOINT flask run --host="0.0.0.0" --port=5000
 ```
