@@ -46,6 +46,11 @@
             transition: background-color 0.3s, transform 0.2s;;
             border-radius: 20px;
         }
+        #filter-btn:hover {
+          background-color: blue;
+          color: white;
+          transform: scale(1.1);
+        }
         #chrononym {
             flex: 1;
             margin-top: 10px;
@@ -107,7 +112,7 @@
         <div id="filter-form" class="filter-form">
             <label for="chrononym">Фильтр по хронониму:</label>
             <select id="chrononym">
-                <option value="">--Показать все--</option>
+                <option value="">  Показать все  </option>
             </select>
             <button id="filter-btn">Использовать фильтр</button>
             <!--<button id="filter-btn">Сбросить фильтр</button>-->
@@ -130,9 +135,9 @@
         const map = L.map('map', {
           attributionControl: false,
           center: [58.0, 43.5],
-          zoom: 7,
-          maxZoom: 15,
-          minZoom: 7
+          zoom: 7.5
+          <!--maxZoom: 15,-->
+          <!--minZoom: 7-->
         });
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -157,6 +162,16 @@
                 }).addTo(map);
             })
             .catch(error => console.error('Error loading GeoJSON file:', error));
+        const imageUrl = './mapdistricts.png';
+        const imageBounds = [
+          [57.46, 40.57],
+          [59.65, 46.86]
+        ];
+
+        L.imageOverlay(imageUrl, imageBounds, {
+          opacity: 1
+        }).addTo(map);
+        
 
         let markers = [];
 
