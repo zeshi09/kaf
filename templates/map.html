@@ -163,7 +163,7 @@
             })
             .catch(error => console.error('Error loading GeoJSON file:', error));
         
-        const geojsonUrl1 = './geos/Nerekh.geojson';
+        const geojsonUrl1 = 'https://raw.githubusercontent.com/zeshi09/kaf/refs/heads/main/templates/geos/Nerekh.geojson';
         fetch(geojsonUrl1)
             .then(response => response.json())
             .then(data => {
@@ -172,7 +172,10 @@
                         return {
                             color: 'red',   // Цвет границы
                             weight: 3,       // Толщина линии
-                            opacity: 0.1     // Прозрачность
+                            opacity: 0.1,     // Прозрачность
+                            fill: true,
+                            fillColor: 'red',
+                            fillOpacity: 0.5
                         };
                     }
                 }).addTo(map);
