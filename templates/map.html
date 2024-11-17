@@ -162,16 +162,23 @@
                 }).addTo(map);
             })
             .catch(error => console.error('Error loading GeoJSON file:', error));
-        const imageUrl = './mapdistricts.png';
-        const imageBounds = [
-          [57.46, 40.57],
-          [59.65, 46.86]
-        ];
-
-        L.imageOverlay(imageUrl, imageBounds, {
-          opacity: 1
-        }).addTo(map);
         
+        const geojsonUrl1 = './geos/Nerekh.geojson';
+        fetch(geojsonUrl1)
+            .then(response => response.json())
+            .then(data => {
+                L.geoJSON(data, {
+                    style: function (feature) {
+                        return {
+                            color: 'red',   // Цвет границы
+                            weight: 3,       // Толщина линии
+                            opacity: 0.1     // Прозрачность
+                        };
+                    }
+                }).addTo(map);
+            })
+            .catch(error => console.error('Error loading GeoJSON file:', error));
+
 
         let markers = [];
 
