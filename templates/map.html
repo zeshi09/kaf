@@ -182,6 +182,25 @@
             })
             .catch(error => console.error('Error loading GeoJSON file:', error));
 
+        const geojsonUrl2 = 'https://raw.githubusercontent.com/zeshi09/kaf/refs/heads/main/templates/geos/Krasnosel.geojson';
+        fetch(geojsonUrl2)
+            .then(response => response.json())
+            .then(data => {
+                L.geoJSON(data, {
+                    style: function (feature) {
+                        return {
+                            color: 'yellow',   // Цвет границы
+                            weight: 3,       // Толщина линии
+                            opacity: 0.1,     // Прозрачность
+                            fill: true,
+                            fillColor: 'yellow',
+                            fillOpacity: 0.5
+                        };
+                    }
+                }).addTo(map);
+            })
+            .catch(error => console.error('Error loading GeoJSON file:', error));
+
 
         let markers = [];
 
