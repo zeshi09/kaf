@@ -182,7 +182,7 @@
             })
             .catch(error => console.error('Error loading GeoJSON file:', error));
 
-        const geojsonUrl2 = 'https://raw.githubusercontent.com/zeshi09/kaf/refs/heads/main/templates/geos/buy.json';
+        const geojsonUrl2 = 'https://raw.githubusercontent.com/zeshi09/kaf/refs/heads/main/templates/geos/buy.geojson';
         fetch(geojsonUrl2)
             .then(response => response.json())
             .then(data => {
