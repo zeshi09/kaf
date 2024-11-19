@@ -35,6 +35,15 @@
         #filter-form {
             margin-bottom: 10px;
         }
+        #filter-form label {
+            display: block; /* Устанавливает подписи в блок */
+            margin-bottom: 5px; /* Добавляет отступ ниже подписи */
+        }
+
+        #filter-form select {
+            display: block; /* Устанавливает выпадающие списки в блок */
+            margin-bottom: 10px; /* Добавляет отступ после выпадающего списка */
+        }
         #filter-btn {
             margin-top: 10px;
             margin-left: 40px;
@@ -50,6 +59,17 @@
           background-color: blue;
           color: white;
           transform: scale(1.1);
+        }
+        #toponym {
+            flex: 1;
+            margin-top: 10px;
+            height: 40px;
+            width: 200px;
+            background-color: black;
+            font-size: 15px;
+            color: white;
+            border-radius: 20px; 
+            border: yes;
         }
         #chrononym {
             flex: 1;
@@ -105,6 +125,7 @@
     </style>
 </head>
 <body>
+
     <div id="sidebar">
         <h1>Хрононимы Костромской области</h1>
 
@@ -113,6 +134,10 @@
             <label for="chrononym">Фильтр по хронониму:</label>
             <select id="chrononym">
                 <option value="">  Показать все  </option>
+            </select>
+            <label for="toponym">Фильтр по топониму:</label>
+            <select id="toponym">
+                <option value="">Показать все</option>
             </select>
             <button id="filter-btn">Использовать фильтр</button>
             <!--<button id="filter-btn">Сбросить фильтр</button>-->
@@ -128,16 +153,16 @@
     </div>
 
     <div id="map"></div>
+    <script src="{{ url_for('static', filename='maplayer.js') }}"></script>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        <!--const map = L.map('map').setView([57.0, 43.0], 7);-->
         const map = L.map('map', {
           attributionControl: false,
           center: [58.0, 43.5],
-          zoom: 7.5
-          <!--maxZoom: 15,-->
-          <!--minZoom: 7-->
+          zoom: 7.5,
+          maxZoom: 15,
+          minZoom: 7
         });
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -147,71 +172,16 @@
             noWrap: true
         }).addTo(map);
 
-        const geojsonUrl = 'https://raw.githubusercontent.com/simp37/Russia_geoJSON/refs/heads/master/Kostromskaya.geojson';
-        fetch(geojsonUrl)
-            .then(response => response.json())
-            .then(data => {
-                L.geoJSON(data, {
-                    style: function (feature) {
-                        return {
-                            color: 'blue',   // Цвет границы
-                            weight: 3,       // Толщина линии
-                            opacity: 0.1     // Прозрачность
-                        };
-                    }
-                }).addTo(map);
-            })
-            .catch(error => console.error('Error loading GeoJSON file:', error));
-        
-        const geojsonUrl1 = 'https://raw.githubusercontent.com/zeshi09/kaf/refs/heads/main/templates/geos/Nerekh.geojson';
-        fetch(geojsonUrl1)
-            .then(response => response.json())
-            .then(data => {
-                L.geoJSON(data, {
-                    style: function (feature) {
-                        return {
-                            color: 'red',   // Цвет границы
-                            weight: 3,       // Толщина линии
-                            opacity: 0.1,     // Прозрачность
-                            fill: true,
-                            fillColor: 'red',
-                            fillOpacity: 0.5
-                        };
-                    }
-                }).addTo(map);
-            })
-            .catch(error => console.error('Error loading GeoJSON file:', error));
-
-        const geojsonUrl2 = 'https://raw.githubusercontent.com/zeshi09/kaf/refs/heads/main/templates/geos/buyy.geojson';
-        fetch(geojsonUrl2)
-            .then(response => response.json())
-            .then(data => {
-                L.geoJSON(data, {
-                    style: function (feature) {
-                        return {
-                            color: 'yellow',   // Цвет границы
-                            weight: 3,       // Толщина линии
-                            opacity: 0.1,     // Прозрачность
-                            fill: true,
-                            fillColor: 'yellow',
-                            fillOpacity: 0.5
-                        };
-                    }
-                }).addTo(map);
-            })
-            .catch(error => console.error('Error loading GeoJSON file:', error));
-
-
         let markers = [];
 
         // Функция для загрузки данных и обновления карты
-        function fetchLocations(chrononym = "") {
+        function fetchLocations(chrononym = "", toponym = "") {
             // Удаляем старые маркеры
             markers.forEach(marker => map.removeLayer(marker));
             markers = [];
 
             // Запрос на сервер для получения данных
-            fetch(`/api/locations?chrononym=${encodeURIComponent(chrononym)}`)
+            fetch(`/api/locations?chrononym=${encodeURIComponent(chrononym)}&toponym=${encodeURIComponent(toponym)}`)
                 .then(response => response.json())
                 .then(data => {
                     const locationsList = document.getElementById('locations-list');
@@ -269,10 +239,27 @@
                 .catch(error => console.error('Error loading chrononyms:', error));
         }
 
+        // Функция для загрузки уникальных Toponym
+        function loadToponyms() {
+            fetch('/api/toponyms') // Предполагается, что ваш API возвращает список топонимов
+                .then(response => response.json())
+                .then(data => {
+                    const select = document.getElementById('toponym');
+                    data.forEach(toponym => {
+                        const option = document.createElement('option');
+                        option.value = toponym;
+                        option.textContent = toponym;
+                        select.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Error loading toponyms:', error));
+        }
+
         // Обработчик кнопки фильтрации
         document.getElementById("filter-btn").addEventListener("click", () => {
             const chrononym = document.getElementById("chrononym").value;
-            fetchLocations(chrononym);
+            const toponym = document.getElementById("toponym").value;
+            fetchLocations(chrononym, toponym);
         });
 
         // Показать кнопку, если прокрутили вниз
@@ -299,6 +286,7 @@
 
         // Загрузка уникальных Chrononym при загрузке страницы
         loadChrononyms();
+        loadToponyms();
     </script>
 </body>
 </html>
