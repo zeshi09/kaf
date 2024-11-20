@@ -2,6 +2,13 @@ import requests
 from transliterate import translit
 import json
 import time
+from fake_useragent import UserAgent
+
+ua = UserAgent()
+randomua = ua.random
+headers = {
+        'User-Agent': randomua
+        }
 
 def area_coords_parser(search, max_retries=10, retry_delay=2):
     base_url = "http://nominatim.openstreetmap.org/search"
@@ -14,7 +21,7 @@ def area_coords_parser(search, max_retries=10, retry_delay=2):
     retries = 0
     while retries < max_retries:
         try:
-            response = requests.get(base_url, params=params)
+            response = requests.get(base_url, params=params, headers=headers)
             
             if response.status_code == 403:
                 print(f"403 Forbidden for '{search}'. Retrying... ({retries + 1}/{max_retries})")
@@ -66,4 +73,3 @@ with open('districts.txt', "r", encoding="utf-8") as districts:
             print(f"Coordinates for '{region}' saved to {translit(region.split(' ')[0], language_code='ru', reversed=True)}.json")
         else:  # Ошибка
             print(coords)
-
