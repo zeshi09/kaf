@@ -22,7 +22,7 @@
                 }
             },
             {
-                url: 'https://raw.githubusercontent.com/zeshi09/kaf/refs/heads/main/templates/geos/Nerekh.geojson',
+                url: 'https://raw.githubusercontent.com/zeshi09/kaf/refs/heads/main/templates/geos/Krasnosel.geojson',
                 style: {
                     color: 'red',
                     weight: 3,

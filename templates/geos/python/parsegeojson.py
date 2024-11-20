@@ -46,11 +46,11 @@ def area_coords_parser(search, max_retries=10, retry_delay=2):
                 for polygon in coordinates:
                     temp = []
                     for coord in polygon[0]:  # Берем внешний контур
-                        temp.append(coord[::-1])  # Меняем местами широту и долготу
+                        temp.append(coord)  # Не меняем местами широту и долготу
                     result.append(temp)
             elif geojson_type == "Polygon":
                 for coord in coordinates[0]:  # Берем внешний контур
-                    result.append(coord[::-1])  # Меняем местами широту и долготу
+                    result.append(coord)  # Не меняем местами широту и долготу
 
             return result
 
