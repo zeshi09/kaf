@@ -18,7 +18,7 @@
                     opacity: 0.9,
                     fill: true,
                     fillColor: 'blue',
-                    fillOpacity: 0.0
+                    fillOpacity: 0.2
                 }
             },
             {
@@ -232,6 +232,17 @@
             },
             {
                 url: 'https://raw.githubusercontent.com/zeshi09/kaf/refs/heads/main/templates/geos/Sharinskij.geojson',
+                style: {
+                    color: 'orange',
+                    weight: 3,
+                    opacity: 0.1,
+                    fill: true,
+                    fillColor: 'orange',
+                    fillOpacity: 0.5
+                }
+            },
+            {
+                url: 'https://raw.githubusercontent.com/zeshi09/kaf/refs/heads/main/templates/geos/Soligalich.geojson',
                 style: {
                     color: 'orange',
                     weight: 3,
