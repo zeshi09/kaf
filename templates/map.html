@@ -255,12 +255,54 @@
                 .catch(error => console.error('Error loading toponyms:', error));
         }
 
-        // Обработчик кнопки фильтрации
+        <!--// Обработчик кнопки фильтрации-->
         document.getElementById("filter-btn").addEventListener("click", () => {
             const chrononym = document.getElementById("chrononym").value;
             const toponym = document.getElementById("toponym").value;
             fetchLocations(chrononym, toponym);
         });
+        <!--document.getElementById("filter-btn").addEventListener("click", function() {-->
+        <!--    const chrononymSelect = document.getElementById("chrononym");-->
+        <!--    const toponymSelect = document.getElementById("toponym");-->
+        <!---->
+        <!--    // Получаем выбранные хрононимы-->
+        <!--    const selectedChrononyms = Array.from(chrononymSelect.selectedOptions).map(option => option.value);-->
+        <!---->
+        <!--    // Получаем выбранный топоним-->
+        <!--    const selectedToponym = toponymSelect.value;-->
+        <!---->
+        <!--    // Строим запрос с фильтрами-->
+        <!--    let query = "";-->
+        <!---->
+        <!--    if (selectedChrononyms.length > 0) {-->
+        <!--        query += "chrononym=" + selectedChrononyms.join(","); // Отправляем хрононимы через запятую-->
+        <!--    }-->
+        <!---->
+        <!--    if (selectedToponym) {-->
+        <!--        if (query) query += "&";-->
+        <!--        query += "toponym=" + selectedToponym;-->
+        <!--    }-->
+        <!---->
+        <!--    // Делаем запрос с параметрами-->
+        <!--    fetch("/api/locations?" + query)-->
+        <!--        .then(response => response.json())-->
+        <!--        .then(data => {-->
+        <!--            updateLocationList(data);-->
+        <!--        });-->
+        <!--});-->
+        <!---->
+        <!--function updateLocationList(data) {-->
+        <!--    const locationsList = document.getElementById("locations-list");-->
+        <!--    locationsList.innerHTML = ""; // Очищаем список-->
+        <!---->
+        <!--    // Добавляем полученные данные в список-->
+        <!--    data.forEach(location => {-->
+        <!--        const div = document.createElement("div");-->
+        <!--        div.innerHTML = `${location.chrononym} - ${location.toponym}`;-->
+        <!--        locationsList.appendChild(div);-->
+        <!--    });-->
+        <!--}-->
+
 
         // Показать кнопку, если прокрутили вниз
         const sidebar = document.getElementById('locations-list');
