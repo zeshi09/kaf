@@ -89,6 +89,9 @@
         }
         #locations-list div {
             padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
             border-radius: 20px;
             margin-bottom: 10px;
             cursor: pointer;
@@ -126,17 +129,20 @@
 </head>
 <body>
 
+
+
+
     <div id="sidebar">
         <h1>Хрононимы Костромской области</h1>
 
         <!-- Форма фильтрации -->
         <div id="filter-form" class="filter-form">
             <label for="chrononym">Фильтр по хронониму:</label>
-            <select id="chrononym">
-                <option value="">  Показать все  </option>
+            <select id="chrononym" multiple size="5">
+                <option value=""> Показать все  </option>
             </select>
             <label for="toponym">Фильтр по топониму:</label>
-            <select id="toponym">
+            <select id="toponym" multiple size="5">
                 <option value="">Показать все</option>
             </select>
             <button id="filter-btn">Использовать фильтр</button>
@@ -151,6 +157,9 @@
 
         <button id="scroll-to-top" title="Наверх">&#8593;</button>
     </div>
+
+
+
 
     <div id="map"></div>
     <script src="{{ url_for('static', filename='maplayer.js') }}"></script>
@@ -199,7 +208,7 @@
                                 ${location.context}<br>
                                 <small>${location.toponym}</small>
                             `);
-                        markers.push(marker);
+                        markers.push(marker)
 
                         // Создаем HTML элемент для списка с полным описанием
                         const listItem = document.createElement('div');
@@ -255,53 +264,12 @@
                 .catch(error => console.error('Error loading toponyms:', error));
         }
 
-        <!--// Обработчик кнопки фильтрации-->
+        // Обработчик кнопки фильтрации
         document.getElementById("filter-btn").addEventListener("click", () => {
             const chrononym = document.getElementById("chrononym").value;
             const toponym = document.getElementById("toponym").value;
             fetchLocations(chrononym, toponym);
         });
-        <!--document.getElementById("filter-btn").addEventListener("click", function() {-->
-        <!--    const chrononymSelect = document.getElementById("chrononym");-->
-        <!--    const toponymSelect = document.getElementById("toponym");-->
-        <!---->
-        <!--    // Получаем выбранные хрононимы-->
-        <!--    const selectedChrononyms = Array.from(chrononymSelect.selectedOptions).map(option => option.value);-->
-        <!---->
-        <!--    // Получаем выбранный топоним-->
-        <!--    const selectedToponym = toponymSelect.value;-->
-        <!---->
-        <!--    // Строим запрос с фильтрами-->
-        <!--    let query = "";-->
-        <!---->
-        <!--    if (selectedChrononyms.length > 0) {-->
-        <!--        query += "chrononym=" + selectedChrononyms.join(","); // Отправляем хрононимы через запятую-->
-        <!--    }-->
-        <!---->
-        <!--    if (selectedToponym) {-->
-        <!--        if (query) query += "&";-->
-        <!--        query += "toponym=" + selectedToponym;-->
-        <!--    }-->
-        <!---->
-        <!--    // Делаем запрос с параметрами-->
-        <!--    fetch("/api/locations?" + query)-->
-        <!--        .then(response => response.json())-->
-        <!--        .then(data => {-->
-        <!--            updateLocationList(data);-->
-        <!--        });-->
-        <!--});-->
-        <!---->
-        <!--function updateLocationList(data) {-->
-        <!--    const locationsList = document.getElementById("locations-list");-->
-        <!--    locationsList.innerHTML = ""; // Очищаем список-->
-        <!---->
-        <!--    // Добавляем полученные данные в список-->
-        <!--    data.forEach(location => {-->
-        <!--        const div = document.createElement("div");-->
-        <!--        div.innerHTML = `${location.chrononym} - ${location.toponym}`;-->
-        <!--        locationsList.appendChild(div);-->
-        <!--    });-->
-        <!--}-->
 
 
         // Показать кнопку, если прокрутили вниз
