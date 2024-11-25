@@ -1,5 +1,5 @@
-from geopy.geocoders import Nominatim
-from geopy.exc import GeocoderServiceError, GeocoderTimedOut
+# from geopy.geocoders import Nominatim
+# from geopy.exc import GeocoderServiceError, GeocoderTimedOut
 import csv
 import time
 import sqlite3
@@ -8,46 +8,60 @@ import sqlite3
 data = []
 
 # Чтение CSV и добавление каждой строки как словаря
-with open('chrononyms.csv', mode='r') as file:
+with open('chrononyms_fin.csv', mode='r', encoding="utf-8-sig") as file:
     reader = csv.DictReader(file)
     for row in reader:
         data.append(dict(row))
 
 print(data[2])
 
-# Инициализируем геокодер с пользовательским именем приложения
-geolocator = Nominatim(user_agent="geo_example")
-
-# Координаты костромской области для ограничения поиска
-KOSTROMA_BOUNDING_BOX = [("57.0", "40.0"), ("58.5", "45.5")]
-
-# Функция для получения координат
-def get_coordinates(toponym, bounding_box, retries=3):
-    for attempt in range(retries):
-        try:
-            location = geolocator.geocode(
-                toponym,
-                timeout=10,
-                bounded=True,
-                viewbox=bounding_box
-            )
-            if location:
-                return (location.latitude, location.longitude)
-        except (GeocoderTimedOut, GeocoderServiceError) as e:
-            print(f"Попытка {attempt+1}: ошибка для {toponym} - {e}")
-        # except Exception as e:
-        #     print(f"Ошибка получения координат для {toponym}: {e}")
-    return None
+#  Инициализируем геокодер с пользовательским именем приложения
+# geolocator = Nominatim(user_agent="geo_example")
+#
+# # Координаты костромской области для ограничения поиска
+# KOSTROMA_BOUNDING_BOX = [("57.0", "40.0"), ("58.5", "45.5")]
+#
+# # Функция для получения координат
+# def get_coordinates(toponym, bounding_box, retries=3):
+#     for attempt in range(retries):
+#         try:
+#             location = geolocator.geocode(
+#                 toponym,
+#                 timeout=10,
+#                 bounded=True,
+#                 viewbox=bounding_box
+#             )
+#             if location:
+#                 return (location.latitude, location.longitude)
+#         except (GeocoderTimedOut, GeocoderServiceError) as e:
+#             print(f"Попытка {attempt+1}: ошибка для {toponym} - {e}")
+#         # except Exception as e:
+#         #     print(f"Ошибка получения координат для {toponym}: {e}")
+#     return None
 
 # Заполняем ключ coord координатами для каждого элемента
-for item in data:
-    item["Coord"] = get_coordinates(item["Toponym"], KOSTROMA_BOUNDING_BOX)
-    a = item["Toponym"]
-    print(f"Пытаемся найти {a}")
-    print(item["Coord"])
-    time.sleep(1)  # Пауза, чтобы избежать ограничений по частоте запросов
+coords = []
+with open('districts_coords.csv', mode='r', encoding="utf-8-sig") as f:
+    reader_coord = csv.DictReader(f)
+    for row in reader_coord:
+        coords.append(dict(row))
+print(coords[2])
 
-connection = sqlite3.connect("Locations.db")
+for item in data:
+    for item2 in coords:
+        if item["SS"] == item2["SS"]:
+            item["Latitude"] = item2["Lat"]
+            item["Longitude"] = item2["Long"]
+print(data[2])
+
+# for item in data:
+#     item["Coord"] = get_coordinates(item["Toponym"], KOSTROMA_BOUNDING_BOX)
+#     a = item["Toponym"]
+#     print(f"Пытаемся найти {a}")
+#     print(item["Coord"])
+#     time.sleep(1)  # Пауза, чтобы избежать ограничений по частоте запросов
+#
+connection = sqlite3.connect("Locations_fin.db")
 cursor = connection.cursor()
 
 cursor.execute(
@@ -57,7 +71,8 @@ cursor.execute(
         Chrononym TEXT NOT NULL,
         Definition TEXT NOT NULL,
         Context TEXT NOT NULL,
-        Toponym TEXT NOT NULL,
+        District TEXT NOT NULL,
+        Selsovet TEXT NOT NULL,
         Latitude REAL,
         Longitude REAL
     )
@@ -65,24 +80,29 @@ cursor.execute(
 )
 connection.commit()
 
-
+count = 0
 for item in data:
-    chron = item["Name"]
-    defi = item["Definition"]
+    count += 1
+    chron = item["Chrononym"]
+    defi = item["Def"]
     conx = item["Context"]
-    top = item["Toponym"]
-    if item["Coord"]:
-        lat, lon = item["Coord"]
-        cursor.execute("INSERT INTO locations (Chrononym, Definition, Context, Toponym, Latitude, Longitude) VALUES (?, ?, ?, ?, ?, ?)", (chron, defi, conx, top, lat, lon))
+    dis = item["District"]
+    ss = item["SS"]
+    lt = 57.707405 
+    ln = 39.898133
+    if item["Latitude"]:
+        lat = item["Latitude"]
+        lon = item["Longitude"]
+        cursor.execute("INSERT INTO locations (Chrononym, Definition, Context, District, Selsovet, Latitude, Longitude) VALUES (?, ?, ?, ?, ?, ?, ?)", (chron, defi, conx, dis, ss, lat, lon))
     else:
-        cursor.execute("INSERT INTO locations (Chrononym, Definition, Context, Toponym, Latitude, Longitude) VALUES (?, ?, ?, ?, NULL, NULL)", (chron, defi, conx, top,))
+        cursor.execute("INSERT INTO locations (Chrononym, Definition, Context, District, Selsovet, Latitude, Longitude) VALUES (?, ?, ?, ?, ?, ?, ?)", (chron, defi, conx, dis, ss, lt, ln))
 
 connection.commit()
 
 
 cursor.execute("SELECT * FROM locations")
 rows = cursor.fetchall()
-for row in rows:
-    print(row)
+# for row in rows:
+#     print(row)
 
 connection.close

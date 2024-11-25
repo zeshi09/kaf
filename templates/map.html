@@ -122,6 +122,18 @@
             display: none; /* Скрываем кнопку по умолчанию */
             z-index: 10;
         }
+        .leaflet-popup-content {
+            max-height: 600px; /* Максимальная высота попапа */
+            overflow-y: auto;  /* Добавление вертикальной прокрутки */
+            width: 200px;      /* Ширина попапа */
+            padding: 10px;     /* Отступы внутри попапа */
+            box-sizing: border-box; /* Учитывать отступы при расчете ширины и высоты */
+        }
+        .leaflet-popup-content .popup-item {
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #000;
+        }
         #scroll-to-top:hover {
             background-color: #0056b3;
         }
@@ -138,11 +150,11 @@
         <!-- Форма фильтрации -->
         <div id="filter-form" class="filter-form">
             <label for="chrononym">Фильтр по хронониму:</label>
-            <select id="chrononym" multiple size="5">
+            <select id="chrononym">
                 <option value=""> Показать все  </option>
             </select>
             <label for="toponym">Фильтр по топониму:</label>
-            <select id="toponym" multiple size="5">
+            <select id="toponym">
                 <option value="">Показать все</option>
             </select>
             <button id="filter-btn">Использовать фильтр</button>
@@ -165,139 +177,7 @@
     <script src="{{ url_for('static', filename='maplayer.js') }}"></script>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script>
-        const map = L.map('map', {
-          attributionControl: false,
-          center: [58.0, 43.5],
-          zoom: 7.5,
-          maxZoom: 15,
-          minZoom: 7
-        });
-
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            <!--attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',-->
-            attribution: '',
-            attributionControl: false,
-            noWrap: true
-        }).addTo(map);
-
-        let markers = [];
-
-        // Функция для загрузки данных и обновления карты
-        function fetchLocations(chrononym = "", toponym = "") {
-            // Удаляем старые маркеры
-            markers.forEach(marker => map.removeLayer(marker));
-            markers = [];
-
-            // Запрос на сервер для получения данных
-            fetch(`/api/locations?chrononym=${encodeURIComponent(chrononym)}&toponym=${encodeURIComponent(toponym)}`)
-                .then(response => response.json())
-                .then(data => {
-                    const locationsList = document.getElementById('locations-list');
-                    locationsList.innerHTML = ""; // Очищаем список перед обновлением
-
-                    document.getElementById('selected-count').textContent = `Выбрано: ${data.length}`;
-
-                    data.forEach(location => {
-                        // Добавление маркера на карту
-                        const marker = L.marker([location.latitude, location.longitude])
-                            .addTo(map)
-                            .bindPopup(`
-                                <b>${location.chrononym}</b><br>
-                                <i>${location.definition}</i><br>
-                                ${location.context}<br>
-                                <small>${location.toponym}</small>
-                            `);
-                        markers.push(marker)
-
-                        // Создаем HTML элемент для списка с полным описанием
-                        const listItem = document.createElement('div');
-                        listItem.innerHTML = `
-                            <b>${location.chrononym}</b><br>
-                            <i>${location.definition}</i><br>
-                            ${location.context}<br>
-                            <small>${location.toponym}</small>
-                        `;
-                        listItem.style.cursor = 'pointer';
-                        listItem.style.padding = '10px';
-                        listItem.style.marginBottom = '10px';
-                        listItem.style.borderBottom = '1px solid #ddd';
-                        listItem.addEventListener('click', () => {
-                            map.setView([location.latitude, location.longitude], 10);
-                            marker.openPopup();
-                        });
-                        locationsList.appendChild(listItem);
-                    });
-                })
-                .catch(error => console.error('Error fetching locations:', error));
-        }
-
-        // Функция для загрузки уникальных Chrononym
-        function loadChrononyms() {
-            fetch('/api/chrononyms')
-                .then(response => response.json())
-                .then(data => {
-                    const select = document.getElementById('chrononym');
-                    data.forEach(chrononym => {
-                        const option = document.createElement('option');
-                        option.value = chrononym;
-                        option.textContent = chrononym;
-                        select.appendChild(option);
-                    });
-                })
-                .catch(error => console.error('Error loading chrononyms:', error));
-        }
-
-        // Функция для загрузки уникальных Toponym
-        function loadToponyms() {
-            fetch('/api/toponyms') // Предполагается, что ваш API возвращает список топонимов
-                .then(response => response.json())
-                .then(data => {
-                    const select = document.getElementById('toponym');
-                    data.forEach(toponym => {
-                        const option = document.createElement('option');
-                        option.value = toponym;
-                        option.textContent = toponym;
-                        select.appendChild(option);
-                    });
-                })
-                .catch(error => console.error('Error loading toponyms:', error));
-        }
-
-        // Обработчик кнопки фильтрации
-        document.getElementById("filter-btn").addEventListener("click", () => {
-            const chrononym = document.getElementById("chrononym").value;
-            const toponym = document.getElementById("toponym").value;
-            fetchLocations(chrononym, toponym);
-        });
-
-
-        // Показать кнопку, если прокрутили вниз
-        const sidebar = document.getElementById('locations-list');
-        const scrollToTopBtn = document.getElementById('scroll-to-top');
-        sidebar.addEventListener('scroll', () => {
-            if (sidebar.scrollTop > 100) {
-                scrollToTopBtn.style.display = 'block';
-            } else {
-                scrollToTopBtn.style.display = 'none';
-            }
-        });
-
-        // Обработчик нажатия на кнопку
-        scrollToTopBtn.addEventListener('click', () => {
-            sidebar.scrollTo({
-                top: 0,
-                behavior: 'smooth' // Плавная прокрутка
-            });
-        });
-
-        // Загрузка всех точек при загрузке страницы
-        fetchLocations();
-
-        // Загрузка уникальных Chrononym при загрузке страницы
-        loadChrononyms();
-        loadToponyms();
-    </script>
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
 </body>
 </html>
 

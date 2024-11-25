@@ -5,7 +5,7 @@ app = Flask(__name__)
 
 # Функция для подключения к базе данных и извлечения данных
 def get_data_from_db(chrononym=None, toponym=None):
-    conn = sqlite3.connect("Locations.db")
+    conn = sqlite3.connect("Locations_fin.db")
     cursor = conn.cursor()
 
     # if chrononym:
@@ -24,7 +24,7 @@ def get_data_from_db(chrononym=None, toponym=None):
     #     cursor.execute(query)
 
     query = """
-        SELECT Chrononym, Definition, Context, Toponym, Latitude, Longitude
+        SELECT Chrononym, Definition, Context, District, Selsovet, Latitude, Longitude
         FROM locations
         WHERE Latitude IS NOT NULL AND Longitude IS NOT NULL
     """
@@ -34,7 +34,7 @@ def get_data_from_db(chrononym=None, toponym=None):
         query += " AND Chrononym = ?"
         params.append(chrononym)
     if toponym:
-        query += " AND Toponym = ?"
+        query += " AND Selsovet = ?"
         params.append(toponym)
 
     cursor.execute(query, tuple(params))
@@ -59,9 +59,11 @@ def locations():
             "chrononym": row[0],
             "definition": row[1],
             "context": row[2],
-            "toponym": row[3],
-            "latitude": row[4],
-            "longitude": row[5],
+            "distr": row[3],
+            "toponym": row[4],
+            "latitude": row[5],
+            "longitude": row[6],
+            # "year": row
         }
         for row in data
     ]
@@ -70,7 +72,7 @@ def locations():
 # API для получения уникальных значений Chrononym
 @app.route("/api/chrononyms")
 def get_chrononyms():
-    conn = sqlite3.connect("Locations.db")
+    conn = sqlite3.connect("Locations_fin.db")
     cursor = conn.cursor()
 
     query = "SELECT DISTINCT Chrononym FROM locations WHERE Chrononym IS NOT NULL"
@@ -83,10 +85,10 @@ def get_chrononyms():
 # API для получения уникальных значений Toponym
 @app.route("/api/toponyms")
 def get_toponyms():
-    conn = sqlite3.connect("Locations.db")
+    conn = sqlite3.connect("Locations_fin.db")
     cursor = conn.cursor()
 
-    query = "SELECT DISTINCT Toponym FROM locations WHERE Toponym IS NOT NULL"
+    query = "SELECT DISTINCT Selsovet FROM locations WHERE Selsovet IS NOT NULL"
     cursor.execute(query)
     data = cursor.fetchall()
     conn.close()
