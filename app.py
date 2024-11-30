@@ -96,5 +96,5 @@ def get_toponyms():
     toponyms = [row[0] for row in data]
     return jsonify(toponyms)
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)
 
