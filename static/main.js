@@ -17,15 +17,15 @@ const map = L.map('map', {
       let markers = [];
       
       
-      function fetchLocations(chrononym = "", toponym = "") {
-          console.log("Fetching locations with filters:", { chrononym, toponym });
+      function fetchLocations(chrononym = "", toponym = "", district = "") {
+          console.log("Fetching locations with filters:", { chrononym, toponym, district });
 
           // Удаляем старые маркеры
           markers.forEach(marker => map.removeLayer(marker));
           markers = [];
 
           // Запрос на сервер для получения данных
-          fetch(`/api/locations?chrononym=${encodeURIComponent(chrononym)}&toponym=${encodeURIComponent(toponym)}`)
+          fetch(`/api/locations?chrononym=${encodeURIComponent(chrononym)}&toponym=${encodeURIComponent(toponym)}&district=${encodeURIComponent(district)}`)
               .then(response => {
                   console.log("Server response status:", response.status);
                   if (!response.ok) {
@@ -67,8 +67,10 @@ const map = L.map('map', {
                           <b>${location.chrononym}</b><br>
                           <i>${location.definition}</i><br>
                           ${location.context}<br>
+                          <i>${location.comment}</i><br>
                           <small>${location.distr}</small>
                           <small>${location.toponym}</small>
+                          <small>${location.year}</small>
                       `;
                       listItem.style.cursor = 'pointer';
                       listItem.style.padding = '10px';
@@ -113,106 +115,15 @@ const map = L.map('map', {
                       <b>${location.chrononym}</b><br>
                       <i>${location.definition}</i><br>
                       ${location.context}<br>
-                      <small>${location.distr}</small><br><br>
-                      <small>${location.toponym}</small><br><br>
+                      <b><i>${location.comment}</i></b><br>
+                      <small>${location.distr}</small><br>
+                      <small>${location.toponym}</small><br>
+                      <small>${location.year}</small><br>
                   </div>
               `;
           });
           return content;
       }
-
-      //function fetchLocations(chrononym = "", toponym = "") {
-      //    console.log("Fetching locations with filters:", { chrononym, toponym });
-      //
-      //    // Удаляем старые маркеры
-      //    markers.forEach(marker => map.removeLayer(marker));
-      //    markers = [];
-      //
-      //    // Запрос на сервер для получения данных
-      //    fetch(`/api/locations?chrononym=${encodeURIComponent(chrononym)}&toponym=${encodeURIComponent(toponym)}`)
-      //        .then(response => {
-      //            console.log("Server response status:", response.status);
-      //            if (!response.ok) {
-      //                throw new Error(`Failed to fetch locations. Status: ${response.status}`);
-      //            }
-      //            return response.json();
-      //        })
-      //        .then(data => {
-      //            console.log("Fetched data:", data);
-      //
-      //            const locationsList = document.getElementById('locations-list');
-      //            locationsList.innerHTML = ""; // Очищаем список перед обновлением
-      //
-      //            document.getElementById('selected-count').textContent = `Выбрано: ${data.length}`;
-      //
-      //            if (data.length === 0) {
-      //                console.warn("No locations found for the given filters.");
-      //                return;
-      //            }
-      //
-      //            let groupedMarkers = {};
-      //            data.forEach(location => {
-      //                // Проверяем корректность координат
-      //                if (isNaN(location.latitude) || isNaN(location.longitude)) {
-      //                    console.error("Invalid location coordinates:", location);
-      //                    return; // Пропускаем некорректные данные
-      //                }
-      //
-      //                const key = `${location.latitude}, ${location.longitude}`;
-      //                if (!groupedMarkers[key]) {
-      //                    groupedMarkers[key] = [];
-      //                }
-      //                groupedMarkers[key].push(location);
-      //            });
-      //
-      //            console.log("Grouped markers:", groupedMarkers);
-      //
-      //            Object.keys(groupedMarkers).forEach(key => {
-      //                const group = groupedMarkers[key];
-      //                const [lat, lng] = key.split(',').map(Number);
-      //
-      //                console.log("Creating marker for group at:", { lat, lng });
-      //
-      //                const marker = L.marker([lat, lng])
-      //                    .addTo(map)
-      //                    .bindPopup(generatePopupContent(group));
-      //                markers.push(marker);
-      //
-      //                const listItem = document.createElement('div');
-      //                listItem.innerHTML = `
-      //                    <b>${group[0].chrononym}</b><br>
-      //                    <i>${group[0].definition}</i><br>
-      //                    ${group[0].context}<br>
-      //                    <small>${group[0].toponym}</small>
-      //                `;
-      //                listItem.style.cursor = 'pointer';
-      //                listItem.style.padding = '10px';
-      //                listItem.style.marginBottom = '10px';
-      //
-      //                listItem.addEventListener('click', () => {
-      //                    console.log("List item clicked. Moving to:", { lat, lng });
-      //                    map.setView([lat, lng], 10);
-      //                    marker.openPopup();
-      //                });
-      //
-      //                locationsList.appendChild(listItem);
-      //            });
-      //        })
-      //        .catch(error => console.error("Error fetching locations:", error));
-      //}
-      //
-      //function generatePopupContent(group) {
-      //    let content = '<b>Элементы в этой точке:</b><br>';
-      //    group.forEach(location => {
-      //        content += `
-      //            <b>${location.chrononym}</b><br>
-      //            <i>${location.definition}</i><br>
-      //            ${location.context}<br>
-      //            <small>${location.toponym}</small><br><br>
-      //        `;
-      //    });
-      //    return content;
-      //}
 
       // Функция для загрузки уникальных Chrononym
       function loadChrononyms() {
@@ -246,25 +157,44 @@ const map = L.map('map', {
               .catch(error => console.error('Error loading toponyms:', error));
       }
 
+      // Функция для загрузки уникальных District
+      function loadDistricts() {
+          fetch('/api/districts') // Предполагается, что ваш API возвращает список топонимов
+              .then(response => response.json())
+              .then(data => {
+                  const select = document.getElementById('district');
+                  data.forEach(district => {
+                      const option = document.createElement('option');
+                      option.value = district;
+                      option.textContent = district;
+                      select.appendChild(option);
+                  });
+              })
+              .catch(error => console.error('Error loading districts:', error));
+      }
+
+
       // Обработчик кнопки фильтрации
       document.getElementById("filter-btn").addEventListener("click", () => {
           // Получаем значения полей ввода
           const chrononym = document.getElementById("chrononym").value;
           const toponym = document.getElementById("toponym").value;
+          const district = document.getElementById("district").value;
 
           // Логи для отладки
           console.log("Filter button clicked");
           console.log("Chrononym value:", chrononym);
           console.log("Toponym value:", toponym);
+          console.log("District value:", district);
 
           // Проверка значений перед вызовом функции
-          if (!chrononym && !toponym) {
+          if (!chrononym && !toponym && !district) {
               console.warn("No filter values provided. Both fields are empty.");
           }
 
           // Вызов функции с логами
-          console.log("Calling fetchLocations with:", { chrononym, toponym });
-          fetchLocations(chrononym, toponym)
+          console.log("Calling fetchLocations with:", { chrononym, toponym, district });
+          fetchLocations(chrononym, toponym, district)
               .then(() => console.log("fetchLocations completed successfully"))
               .catch(err => console.error("Error in fetchLocations:", err));
       });
@@ -295,4 +225,5 @@ const map = L.map('map', {
       // Загрузка уникальных Chrononym при загрузке страницы
       loadChrononyms();
       loadToponyms();
+      loadDistricts();
 

@@ -4,7 +4,7 @@ import sqlite3
 app = Flask(__name__)
 
 # Функция для подключения к базе данных и извлечения данных
-def get_data_from_db(chrononym=None, toponym=None):
+def get_data_from_db(chrononym=None, toponym=None, district=None):
     conn = sqlite3.connect("Locations_fin.db")
     cursor = conn.cursor()
 
@@ -24,7 +24,7 @@ def get_data_from_db(chrononym=None, toponym=None):
     #     cursor.execute(query)
 
     query = """
-        SELECT Chrononym, Definition, Context, District, Selsovet, Latitude, Longitude
+        SELECT Chrononym, Definition, Context, District, Selsovet, Latitude, Longitude, Comment, Year, District_ss
         FROM locations
         WHERE Latitude IS NOT NULL AND Longitude IS NOT NULL
     """
@@ -34,8 +34,11 @@ def get_data_from_db(chrononym=None, toponym=None):
         query += " AND Chrononym = ?"
         params.append(chrononym)
     if toponym:
-        query += " AND Selsovet = ?"
+        query += " AND District_ss = ?"
         params.append(toponym)
+    if district:
+        query += " AND District = ?"
+        params.append(district)
 
     cursor.execute(query, tuple(params))
     data = cursor.fetchall()
@@ -52,7 +55,8 @@ def index():
 def locations():
     chrononym = request.args.get("chrononym")
     toponym = request.args.get("toponym")
-    data = get_data_from_db(chrononym, toponym)
+    district = request.args.get("district")
+    data = get_data_from_db(chrononym, toponym, district)
 
     response = [
         {
@@ -63,7 +67,9 @@ def locations():
             "toponym": row[4],
             "latitude": row[5],
             "longitude": row[6],
-            # "year": row
+            "year": row[7],
+            "comment": row[8],
+            "dis_ss": row[9]
         }
         for row in data
     ]
@@ -75,7 +81,7 @@ def get_chrononyms():
     conn = sqlite3.connect("Locations_fin.db")
     cursor = conn.cursor()
 
-    query = "SELECT DISTINCT Chrononym FROM locations WHERE Chrononym IS NOT NULL"
+    query = "SELECT DISTINCT Chrononym FROM locations WHERE Chrononym IS NOT NULL ORDER BY Chrononym ASC"
     cursor.execute(query)
     data = cursor.fetchall()
     conn.close()
@@ -88,13 +94,26 @@ def get_toponyms():
     conn = sqlite3.connect("Locations_fin.db")
     cursor = conn.cursor()
 
-    query = "SELECT DISTINCT Selsovet FROM locations WHERE Selsovet IS NOT NULL"
+    # query = "SELECT DISTINCT Selsovet FROM locations WHERE Selsovet IS NOT NULL ORDER BY Selsovet ASC"
+    query = "SELECT DISTINCT District_ss FROM locations WHERE District_ss IS NOT NULL ORDER BY District_ss ASC"
     cursor.execute(query)
     data = cursor.fetchall()
     conn.close()
 
     toponyms = [row[0] for row in data]
     return jsonify(toponyms)
+# API для получения уникальных значений District
+@app.route("/api/districts")
+def get_districts():
+    conn = sqlite3.connect("Locations_fin.db")
+    cursor = conn.cursor()
+
+    query = "SELECT DISTINCT District FROM locations WHERE District IS NOT NULL ORDER BY District ASC"
+    cursor. execute(query)
+    data = cursor.fetchall()
+    conn.close()
+
+    districts = [row[0] for row in data]
+    return jsonify(districts)
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
-

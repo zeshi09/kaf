@@ -82,6 +82,17 @@
             border-radius: 20px; 
             border: yes;
         }
+        #district {
+            flex: 1;
+            margin-top: 10px;
+            height: 40px;
+            width: 200px;
+            background-color: black;
+            font-size: 15px;
+            color: white;
+            border-radius: 20px; 
+            border: yes;
+        }
         #locations-list {
             flex: 1;
             overflow-y: auto;
@@ -156,6 +167,10 @@
             </select>
             <label for="toponym">Фильтр по топониму:</label>
             <select id="toponym">
+                <option value="">Показать все</option>
+            </select>
+            <label for="district">Фильтр по району:</label>
+            <select id="district">
                 <option value="">Показать все</option>
             </select>
             <button id="filter-btn">Использовать фильтр</button>

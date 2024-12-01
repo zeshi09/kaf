@@ -49,9 +49,11 @@ print(coords[2])
 
 for item in data:
     for item2 in coords:
-        if item["SS"] == item2["SS"]:
+        if item["SS"] == item2["SS"] and item["District"] == item2["Short_dis"]:
             item["Latitude"] = item2["Lat"]
             item["Longitude"] = item2["Long"]
+        else:
+            print(item2)
 print(data[2])
 
 # for item in data:
@@ -74,7 +76,10 @@ cursor.execute(
         District TEXT NOT NULL,
         Selsovet TEXT NOT NULL,
         Latitude REAL,
-        Longitude REAL
+        Longitude REAL,
+        Comment TEXT,
+        Year TEXT NOT NULL,
+        District_ss TEXT NOT NULL
     )
     """
 )
@@ -88,21 +93,24 @@ for item in data:
     conx = item["Context"]
     dis = item["District"]
     ss = item["SS"]
+    year = item["Year"]
+    comm = item["Comment"]
+    diss = dis + ", " + ss
     lt = 57.707405 
     ln = 39.898133
     if item["Latitude"]:
         lat = item["Latitude"]
         lon = item["Longitude"]
-        cursor.execute("INSERT INTO locations (Chrononym, Definition, Context, District, Selsovet, Latitude, Longitude) VALUES (?, ?, ?, ?, ?, ?, ?)", (chron, defi, conx, dis, ss, lat, lon))
+        cursor.execute("INSERT INTO locations (Chrononym, Definition, Context, District, Selsovet, Latitude, Longitude, Comment, Year, District_ss) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (chron, defi, conx, dis, ss, lat, lon, year, comm, diss))
     else:
-        cursor.execute("INSERT INTO locations (Chrononym, Definition, Context, District, Selsovet, Latitude, Longitude) VALUES (?, ?, ?, ?, ?, ?, ?)", (chron, defi, conx, dis, ss, lt, ln))
+        cursor.execute("INSERT INTO locations (Chrononym, Definition, Context, District, Selsovet, Latitude, Longitude, Comment, Year, District_ss) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (chron, defi, conx, dis, ss, lt, ln, comm, year, diss))
 
 connection.commit()
 
 
 cursor.execute("SELECT * FROM locations")
 rows = cursor.fetchall()
-# for row in rows:
-#     print(row)
+for row in rows:
+    print(row)
 
 connection.close
